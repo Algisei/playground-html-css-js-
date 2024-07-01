@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        canvas {
+            background-color: grey;
+            display: block;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="mazeCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById('mazeCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Set canvas size to match the window size
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const cellSize = 20;
+        const mazeWidth = Math.floor(canvas.width / cellSize);
+        const mazeHeight = Math.floor(canvas.height / cellSize);
+        let maze;
+
+        let yellowBonusCount = 0;
+        let showPath = false;
+        let shortestPath = [];
+
+        function randomColor() {
+            return `rgb(${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)})`;
+        }
+
+        function createMaze() {
+            maze = Array.from({ length: mazeHeight }, () => Array.from({ length: mazeWidth }, () => ({
+                top: true,
+                right: true,
+                bottom: true,
+                left: true,
+                visited: false,
+                color: randomColor(),
+                bonus: null
+            })));
+
+            function shuffle(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+                return array;
+            }
+
+            function visit(x, y) {
+                if (x < 0 || y < 0 || x >= mazeWidth || y >= mazeHeight) return;
+                if (maze[y][x].visited) return;
+
+                maze[y][x].visited = true;
+                maze[y][x].color = 'grey';
+
+                const directions = shuffle(['left', 'right', 'top', 'bottom']);
+
+                for (const direction of directions) {
+                    let nx = x, ny = y;
+                    if (direction === 'left') nx--;
+                    if (direction === 'right') nx++;
+                    if (direction === 'top') ny--;
+                    if (direction === 'bottom') ny++;
+
+                    if (nx >= 0 && ny >= 0 && nx < mazeWidth && ny < mazeHeight && !maze[ny][nx].visited) {
+                        if (direction === 'left') {
+                            maze[y][x].left = false;
+                            maze[ny][nx].right = false;
+                        }
+                        if (direction === 'right') {
+                            maze[y][x].right = false;
+                            maze[ny][nx].left = false;
+                        }
+                        if (direction === 'top') {
+                            maze[y][x].top = false;
+                            maze[ny][nx].bottom = false;
+                        }
+                        if (direction === 'bottom') {
+                            maze[y][x].bottom = false;
+                            maze[ny][nx].top = false;
+                        }
+                        visit(nx, ny);
+                    }
+                }
+            }
+
+            visit(0, 0);
+        }
+
+        function drawMaze() {
+            for (let y = 0; y < mazeHeight; y++) {
+                for (let x = 0; x < mazeWidth; x++) {
+                    const cell = maze[y][x];
+                    ctx.fillStyle = cell.color;
+                    ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+
+                    ctx.strokeStyle = 'black';
+                    ctx.lineWidth = 2;
+
+                    if (cell.top) {
+                        ctx.beginPath();
+                        ctx.moveTo(x * cellSize, y * cellSize);
+                        ctx.lineTo((x + 1) * cellSize, y * cellSize);
+                        ctx.stroke();
+                    }
+                    if (cell.right) {
+                        ctx.beginPath();
+                        ctx.moveTo((x + 1) * cellSize, y * cellSize);
+                        ctx.lineTo((x + 1) * cellSize, (y + 1) * cellSize);
+                        ctx.stroke();
+                    }
+                    if (cell.bottom) {
+                        ctx.beginPath();
+                        ctx.moveTo(x * cellSize, (y + 1) * cellSize);
+                        ctx.lineTo((x + 1) * cellSize, (y + 1) * cellSize);
+                        ctx.stroke();
+                    }
+                    if (cell.left) {
+                        ctx.beginPath();
+                        ctx.moveTo(x * cellSize, y * cellSize);
+                        ctx.lineTo(x * cellSize, (y + 1) * cellSize);
+                        ctx.stroke();
+                    }
+
+                    // Draw bonuses
+                    if (cell.bonus === 'yellow') {
+                        ctx.fillStyle = 'yellow';
+                        ctx.fillRect(x * cellSize + cellSize / 4, y * cellSize + cellSize / 4, cellSize / 2, cellSize / 2);
+                    } else if (cell.bonus === 'red') {
+                        ctx.fillStyle = 'red';
+                        ctx.fillRect(x * cellSize + cellSize / 4, y * cellSize + cellSize / 4, cellSize / 2, cellSize / 2);
+                    }
+                }
+            }
+        }
+
+        function drawCircle(x, y) {
+            ctx.beginPath();
+            ctx.arc(x * cellSize + cellSize / 2, y * cellSize + cellSize / 2, cellSize / 4, 0, 2 * Math.PI);
+            ctx.fillStyle = 'blue';
+            ctx.fill();
+        }
+
+        let circleX = 0;
+        let circleY = 0;
+
+        function moveCircle(dx, dy) {
+            const newX = circleX + dx;
+            const newY = circleY + dy;
+
+            if (newX < 0 || newY < 0 || newX >= mazeWidth || newY >= mazeHeight) return;
+
+            const cell = maze[circleY][circleX];
+            const newCell = maze[newY][newX];
+
+            if (dx === -1 && (cell.left && yellowBonusCount === 0)) return;
+            if (dx === 1 && (newCell.left && yellowBonusCount === 0)) return;
+            if (dy === -1 && (cell.top && yellowBonusCount === 0)) return;
+            if (dy === 1 && (newCell.top && yellowBonusCount === 0)) return;
+
+            circleX = newX;
+            circleY = newY;
+
+            // Handle bonuses
+            if (newCell.bonus === 'yellow') {
+                yellowBonusCount += 3;
+                newCell.bonus = null;
+            } else if (newCell.bonus === 'red') {
+                newCell.bonus = null;
+                showShortestPath();
+            }
+
+            if (yellowBonusCount > 0) {
+                yellowBonusCount--;
+            }
+
+            draw();
+        }
+
+        function bfsPath(startX, startY, endX, endY) {
+            const queue = [{ x: startX, y: startY, path: [] }];
+            const directions = [
+                { dx: -1, dy: 0 }, // Left
+                { dx: 1, dy: 0 },  // Right
+                { dx: 0, dy: -1 }, // Up
+                { dx: 0, dy: 1 }   // Down
+            ];
+            const visited = Array.from({ length: mazeHeight }, () => Array(mazeWidth).fill(false));
+            visited[startY][startX] = true;
+
+            while (queue.length > 0) {
+                const { x, y, path } = queue.shift();
+                const newPath = [...path, { x, y }];
+
+                if (x === endX && y === endY) {
+                    return newPath;
+                }
+
+                for (const { dx, dy } of directions) {
+                    const nx = x + dx;
+                    const ny = y + dy;
+
+                    if (nx >= 0 && ny >= 0 && nx < mazeWidth && ny < mazeHeight && !visited[ny][nx]) {
+                        const cell = maze[y][x];
+                        const newCell = maze[ny][nx];
+
+                        if ((dx === -1 && !cell.left) || (dx === 1 && !newCell.left) ||
+                            (dy === -1 && !cell.top) || (dy === 1 && !newCell.top)) {
+                            visited[ny][nx] = true;
+                            queue.push({ x: nx, y: ny, path: newPath });
+                        }
+                    }
+                }
+            }
+
+            return [];
+        }
+
+        function drawPath(path) {
+            ctx.strokeStyle = 'blue';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(path[0].x * cellSize + cellSize / 2, path[0].y * cellSize + cellSize / 2);
+            for (const point of path) {
+                ctx.lineTo(point.x * cellSize + cellSize / 2, point.y * cellSize + cellSize / 2);
+            }
+            ctx.stroke();
+        }
+
+        function showShortestPath() {
+            const path = bfsPath(circleX, circleY, mazeWidth - 1, mazeHeight - 1);
+            shortestPath = path;
+            showPath = true;
+            drawPath(shortestPath);
+            setTimeout(() => {
+                showPath = false;
+                draw();
+            }, 10000);
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawMaze();
+            drawCircle(circleX, circleY);
+            if (showPath) {
+                drawPath(shortestPath);
+            }
+        }
+
+        function placeBonuses() {
+            for (let i = 0; i < 10; i++) {
+                let x, y;
+                do {
+                    x = Math.floor(Math.random() * mazeWidth);
+                    y = Math.floor(Math.random() * mazeHeight);
+                } while (maze[y][x].bonus || (x === 0 && y === 0));
+                maze[y][x].bonus = 'yellow';
+            }
+            for (let i = 0; i < 5; i++) {
+                let x, y;
+                do {
+                    x = Math.floor(Math.random() * mazeWidth);
+                    y = Math.floor(Math.random() * mazeHeight);
+                } while (maze[y][x].bonus || (x === 0 && y === 0));
+                maze[y][x].bonus = 'red';
+            }
+        // for (i= 0; i<5 ; i++){
+
+        // }
+        }
+
+        function placeBonus(type) {
+            const directions = [
+                { dx: -1, dy: 0 }, // Left
+                { dx: 1, dy: 0 },  // Right
+                { dx: 0, dy: -1 }, // Up
+                { dx: 0, dy: 1 }   // Down
+            ];
+
+            for (const { dx, dy } of directions) {
+                const newX = circleX + dx;
+                const newY = circleY + dy;
+
+                if (newX >= 0 && newY >= 0 && newX < mazeWidth && newY < mazeHeight) {
+                    maze[newY][newX].bonus = type;
+                    break;
+                }
+            }
+
+            draw();
+        }
+
+        window.addEventListener('keydown', (event) => {
+            switch (event.key) {
+                case 'ArrowUp':
+                    moveCircle(0, -1);
+                    break;
+                case 'ArrowDown':
+                    moveCircle(0, 1);
+                    break;
+                case 'ArrowLeft':
+                    moveCircle(-1, 0);
+                    break;
+                case 'ArrowRight':
+                    moveCircle(1, 0);
+                    break;
+                case '1':
+                    placeBonus('yellow');
+                    break;
+                case '2':
+                    placeBonus('red');
+                    break;
+            }
+        });
+
+        createMaze();
+        placeBonuses();
+        draw();
+    </script>
+</body>
+</html>

@@ -1,0 +1,50 @@
+
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes grow {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.5); }
+    100% { transform: scale(1); }
+}
+
+@keyframes fade {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+@keyframes shift {
+    0% { transform: translateX(0); }
+    50% { transform: translateX(100px); }
+    100% { transform: translateX(0); }
+}
+
+.red-button.spin {
+    animation: spin 1s ease-in-out;
+}
+
+.red-button.grow {
+    animation: grow 1s ease-in-out;
+}
+
+.red-button.fade {
+    animation: fade 1s ease-in-out;
+}
+
+.red-button.shift {
+    animation: shift 1s ease-in-out;
+}
+.game-of-life-canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        opacity: 0.5; /* Полупрозрачный фон */
+    }
+

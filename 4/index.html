@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+        }
+        #dataConsole {
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 200px;
+            height: 100%;
+            background-color: white;
+            border-left: 1px solid black;
+            padding: 10px;
+            overflow-y: scroll;
+        }
+        
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <div id="commandCenterContainer"></div>
+    <script type="module" src="./game.js"></script>
+    <script type="module" src="./dataconsole.js"></script>
+</body>
+</html>

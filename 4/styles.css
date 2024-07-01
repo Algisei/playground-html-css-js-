@@ -1,0 +1,33 @@
+     
+        #gameCanvas {
+            display: block;
+            background: #000;
+        }
+        #dataConsole {
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 200px;
+            height: 100%;
+            background-color: #f0f0f0;
+            border-left: 1px solid #ccc;
+            padding: 10px;
+            overflow-y: auto;
+        }
+
+        .unit-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .unit-container canvas {
+            border: 1px solid #000;
+            margin-right: 10px;
+        }
+        
+        .unit-details {
+            font-size: 12px;
+        }
+        
+

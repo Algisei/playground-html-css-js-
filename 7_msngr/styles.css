@@ -1,0 +1,65 @@
+/* styles.css */
+body {
+    background-color: #000;
+    color: #0f0;
+    font-family: 'Courier New', Courier, monospace;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header, footer {
+    text-align: center;
+}
+
+h1 {
+    font-size: 2em;
+    margin: 0;
+}
+
+.thread-list {
+    margin: 20px 0;
+    padding: 10px;
+    border: 1px solid #0f0;
+    height: 300px;
+    overflow-y: scroll;
+}
+
+.message-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+textarea {
+    background-color: #000;
+    color: #0f0;
+    border: 1px solid #0f0;
+    padding: 10px;
+    font-family: 'Courier New', Courier, monospace;
+    resize: none;
+    height: 100px;
+}
+
+button {
+    background-color: #0f0;
+    color: #000;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+button:hover {
+    background-color: #0a0;
+}
+
+footer p {
+    font-size: 0.8em;
+    margin: 0;
+}
